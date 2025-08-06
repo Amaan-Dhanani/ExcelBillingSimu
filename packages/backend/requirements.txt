@@ -1,0 +1,3 @@
+quart
+openpyxl
+quart_cors
