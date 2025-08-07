@@ -1,5 +1,6 @@
 ```bash
 cd ./packages/frontend
+bun i
 bun run dev
 ```
 
@@ -9,6 +10,3 @@ python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python app.py
 ```
-
-
-BTW, $lib/components <--- everything is from @TreltaSev 

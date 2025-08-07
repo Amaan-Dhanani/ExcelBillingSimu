@@ -1,14 +1,24 @@
 <script lang="ts">
+  import { onMount } from "svelte";
+  import "../app.css";
+  import favicon from "$lib/assets/favicon.svg";
+
   let socket: WebSocket;
   let status = "Not connected";
   let result = "";
   let filePath = "";
 
-  // On form submit, store file path in localStorage
+  onMount(() => {
+    const storedPath = localStorage.getItem("excelFilePath");
+    if (storedPath) {
+      filePath = storedPath;
+    }
+  });
+
   function handleSubmit(e: Event) {
     e.preventDefault();
     localStorage.setItem("excelFilePath", filePath);
-    connect(); // Connect after setting file path
+    connect();
   }
 
   function connect() {
@@ -41,26 +51,31 @@
         data: {
           cell: "A1",
           value: "Ya Ali Madad!",
-          file_path: storedFilePath
-        }
-      })
+          file_path: storedFilePath,
+        },
+      }),
     );
   }
 </script>
 
+<svelte:head>
+  <link rel="icon" href={favicon} />
+</svelte:head>
+
 <p>Status: {status}</p>
 
-<form on:submit|preventDefault={handleSubmit}>
+<form on:submit|preventDefault={handleSubmit} class="flex">
   <label>
-    Excel File Path:
-    <input bind:value={filePath} placeholder="example.xlsx" />
+    File Path:
+    <input
+      class="bg-[#3E3E55] text-white box-border rounded-[12px] px-4 py-3 text-[14px]"
+      bind:value={filePath}
+    />
   </label>
-  <button type="submit">Connect</button>
+  <button  class="bg-[#3d5cff] text-white outline-0 box-border rounded-[12px] px-4 py-3 text-[14px]" type="submit">Connect</button>
 </form>
 
-<button on:click={sendEdit}>
-  Edit Excel Cell A1
-</button>
+<button on:click={sendEdit}> Edit Excel Cell A1 </button>
 
 {#if result}
   <p>Response: {result}</p>
