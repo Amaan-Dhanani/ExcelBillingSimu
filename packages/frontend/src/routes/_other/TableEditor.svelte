@@ -4,43 +4,54 @@
 
   export let data: string[][] = [[""]];
   export let colHeaders: string[] | undefined = undefined;
-  export let rowHeaders: string[] | undefined = undefined;
+  export let rowHeaders: string[] = [
+    "Procedure Code",
+    "Units",
+    "POS",
+    "Dates of Service (add more as needed)"
+  ];
 
   let table: string[][] = [];
   let undoStack: string[][][] = [];
   let redoStack: string[][][] = [];
-  let submittedData: string[][] = [];
+  import { submittedData } from ".";
 
   let inputRefs: (HTMLInputElement | undefined)[][] = [];
 
   onMount(() => {
-    table = data.length ? data.map(row => [...row]) : [[""]];
+    table = data.length ? data.map((row) => [...row]) : [[""]];
   });
 
   $: {
     if (colHeaders && table[0] && colHeaders.length < table[0].length) {
-      colHeaders = [...colHeaders, ...Array(table[0].length - colHeaders.length).fill("")];
+      colHeaders = [
+        ...colHeaders,
+        ...Array(table[0].length - colHeaders.length).fill(""),
+      ];
     }
     if (rowHeaders && rowHeaders.length < table.length) {
-      rowHeaders = [...rowHeaders, ...Array(table.length - rowHeaders.length).fill("")];
+      rowHeaders = [
+        ...rowHeaders,
+        ...Array(table.length - rowHeaders.length).fill(""),
+      ];
     }
   }
 
   function saveState() {
-    undoStack.push(table.map(row => [...row]));
+    undoStack.push(table.map((row) => [...row]));
     if (undoStack.length > 100) undoStack.shift();
     redoStack = [];
   }
 
   function addColumn() {
     saveState();
-    table = table.map(row => [...row, ""]);
+    table = table.map((row) => [...row, ""]);
   }
 
   function deleteColumn(colIndex: number) {
     if (table[0].length <= 1) return;
     saveState();
-    table = table.map(row => row.filter((_, i) => i !== colIndex));
+    table = table.map((row) => row.filter((_, i) => i !== colIndex));
   }
 
   function addRow() {
@@ -61,7 +72,10 @@
     table = [...table];
   }
 
-  function inputRef(node: HTMLInputElement, params: { row: number; col: number }) {
+  function inputRef(
+    node: HTMLInputElement,
+    params: { row: number; col: number },
+  ) {
     const { row, col } = params;
     inputRefs[row] ??= [];
     inputRefs[row][col] = node;
@@ -69,7 +83,7 @@
     return {
       destroy() {
         inputRefs[row][col] = undefined;
-      }
+      },
     };
   }
 
@@ -135,18 +149,6 @@
           }
         }
         break;
-      case "z":
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          undo();
-        }
-        break;
-      case "y":
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          redo();
-        }
-        break;
     }
   }
 
@@ -160,19 +162,19 @@
 
   function undo() {
     if (undoStack.length === 0) return;
-    redoStack.push(table.map(row => [...row]));
+    redoStack.push(table.map((row) => [...row]));
     table = undoStack.pop()!;
   }
 
   function redo() {
     if (redoStack.length === 0) return;
-    undoStack.push(table.map(row => [...row]));
+    undoStack.push(table.map((row) => [...row]));
     table = redoStack.pop()!;
   }
 
   function submitTable() {
-    submittedData = table.map(row => [...row]);
-    console.log("Submitted Data:", submittedData);
+    submittedData.set(table.map((row) => [...row]));
+    console.log("Submitted Data:", $submittedData);
   }
 </script>
 
@@ -180,10 +182,10 @@
   <table class="table-auto border-collapse w-full mt-4">
     <thead>
       <tr class="bg-gray-100 text-left">
-        <th class="border px-4 py-2 text-center font-semibold">#</th>
+        <th class="border px-4 py-2 text-center font-semibold"></th>
         {#each table[0] as _, colIndex}
           <th class="border px-4 py-2 text-center font-semibold">
-            {colHeaders?.[colIndex] ?? `Col ${colIndex + 1}`}
+            {colHeaders?.[colIndex] ?? `Code ${colIndex + 1}`}
             <button
               on:click={() => deleteColumn(colIndex)}
               class="ml-2 text-red-500 hover:text-red-700"
@@ -207,8 +209,11 @@
     <tbody>
       {#each table as row, rowIndex (rowIndex)}
         <tr>
-          <th class="border px-4 py-2 text-center font-semibold bg-gray-100 flex items-center justify-center space-x-1">
-            <span>{rowHeaders?.[rowIndex] ?? rowIndex + 1}</span>
+          <th
+            class="border px-4 py-2 text-center font-semibold bg-gray-100 flex items-center justify-center space-x-1"
+          >
+            <span>{rowHeaders?.[rowIndex] ?? `Code ${rowIndex + 1}`}</span>
+            
             <button
               on:click={() => deleteRow(rowIndex)}
               class="text-red-500 hover:text-red-700 font-bold"
@@ -243,7 +248,7 @@
     >
       + Row
     </button>
-    <br><br>
+    <br /><br />
     <button
       on:click={undo}
       disabled={undoStack.length === 0}
@@ -252,11 +257,7 @@
     >
       Undo
     </button>
-    <button
-      on:click={redo}
-      disabled={redoStack.length === 0}
-      class="hidden"
-    >
+    <button on:click={redo} disabled={redoStack.length === 0} class="hidden">
       Redo
     </button>
     <button
