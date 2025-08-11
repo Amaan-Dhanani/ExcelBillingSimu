@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { onMount } from "svelte";
+  import { sendEdit } from ".";
 
   export let data: string[][] = [[""]];
   export let colHeaders: string[] | undefined = undefined;
@@ -175,6 +176,7 @@
   function submitTable() {
     submittedData.set(table.map((row) => [...row]));
     console.log("Submitted Data:", $submittedData);
+    sendEdit();
   }
 </script>
 

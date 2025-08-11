@@ -9,10 +9,26 @@ let socket: WebSocket;
 
 
 /**
- * - Contains the submitted form/table data.
+ * - Contains the submitted form/table data to complete edit.
  * - Shared between the `TableEditor` component and `+page.svelte` for synchronization.
  */
 export const submittedData = writable<string[][]>([]);
+
+
+
+/**
+ * - Contains the read data to complete edit.
+ * - Shared between the `TableEditor` component and `+page.svelte` for synchronization.
+ */
+export const readData = writable<string[][]>([]);
+
+
+
+/**
+ * - Contains the names of each sheet in Excel.
+ * - Is only used in `+page.svelte`.
+ */
+export const sheetNames = writable<string[]>([]);
 
 
 
@@ -21,6 +37,14 @@ export const submittedData = writable<string[][]>([]);
  * - Is only used within `+page.svelte`.
  */
 export let status = writable<string>("Disconnected");
+
+
+
+/**
+ * - Variable of the sheet to edit data in.
+ * - Is only used within `+page.svelte`.
+ */
+export let sheet = writable<string>("");
 
 
 
@@ -39,11 +63,11 @@ if (browser) {
 }
 
 /**
- * - Nonexported function to connect to the websocket.
+ * - Function to connect to the websocket.
  * - If it doesn't connect, status becomes `"Disconnected"`.
  * - If it does, status becomes `"Connected"`.
  */
-function connect() {
+export function connect() {
   socket = new WebSocket("ws://127.0.0.1:5000/ws");
 
   socket.onopen = () => {
@@ -58,14 +82,20 @@ function connect() {
     const message = JSON.parse(event.data);
     console.log("Received from backend:", message);
 
-    if (message.status === "updated") {
-      console.log(`Cell ${message.cell} updated with value ${message.value}`);
+    if (message.status === "edit_made") {
+      console.log(`${message.message}`);
       alert("Excel file updated successfully.");
     } else if (message.status === "error") {
       console.error("Error from backend:", message.message);
       alert(`Error: ${message.message}`);
-    } else if (message.status === "success" && message.sheets) {
-      console.log("Available sheets:", message.sheets);
+    } else if (message.status === "received_sheets" && message.message) {
+      console.log("Available sheets:", message.message);
+      sheetNames.set(message.message);
+      console.log(get(sheetNames));
+    } else if (message.status === "table_data" && message.message) {
+      console.log("Available data:", message.message);
+      readData.set(message.message);
+      console.log(get(readData));
     }
   };
 
@@ -84,42 +114,8 @@ export async function fileSubmit(e: Event) {
   if (browser) {
     localStorage.setItem("excelFilePath", get(excelFilePath));
   }
-  
-  connect();
 
-  setTimeout(() => {
-    if (get(status) === "Connected") {
-      requestSheets();
-    }
-  }, 500);
-}
-
-
-/**
- * - Function to submit the `excelFilePath` and all the data needed for the backend.
- * - 
- * -
- */
-export function sendEdit() {
-  const payload = {
-    operation: "edit_excel",
-    data: {
-      file_path: get(excelFilePath),
-    },
-  };
-
-  console.log("Sending edit payload:", payload);
-  socket.send(JSON.stringify(payload));
-}
-
-
-
-/**
- * - Sends a request to the backend via WebSocket to retrieve the list of sheet names
- * - from the Excel workbook specified by the current `excelFilePath`.
- */
-export function requestSheets() {
-  if (socket && socket.readyState === WebSocket.OPEN) {
+  if (get(status) === "Connected") {
     const payload = {
       operation: "get_sheets",
       data: {
@@ -129,7 +125,48 @@ export function requestSheets() {
 
     console.log("Requesting sheets with payload:", payload);
     socket.send(JSON.stringify(payload));
-  } else {
-    console.warn("Socket not connected yet.");
   }
 }
+
+
+/**
+ * - Function to make the edit.
+ * - 
+ * -
+ */
+export function sendEdit() {
+  const payload = {
+    operation: "edit_excel",
+    data: {
+      file_path: get(excelFilePath),
+      sheet: get(sheet),
+      submitted_data: get(submittedData),
+      read_data: get(readData)
+    },
+  };
+
+  console.log("Sending edit payload:", payload);
+  socket.send(JSON.stringify(payload));
+}
+
+
+
+
+/**
+ * - Function which gets data for each sheet.
+ * - 
+ * -
+ */
+export function eachSheet() {
+  const payload = {
+    operation: "each_sheet",
+    data: {
+      file_path: get(excelFilePath),
+      sheet: get(sheet),
+    },
+  };
+
+  console.log("Sending edit payload:", payload);
+  socket.send(JSON.stringify(payload));
+}
+

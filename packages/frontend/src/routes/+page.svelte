@@ -2,9 +2,9 @@
   import "./_other/app.css";
   import TableEditor from "./_other/TableEditor.svelte";
   import favicon from "./_other/favicon.svg";
-  import { submittedData, fileSubmit, excelFilePath, status, sendEdit } from "./_other";
-
-
+  import { submittedData, fileSubmit, excelFilePath, status, sendEdit, connect, sheetNames, readData } from "./_other";
+    import SheetGetter from "./_other/SheetGetter.svelte";
+    connect();
 </script>
 
 <svelte:head>
@@ -26,7 +26,13 @@
 
 <button on:click={sendEdit}> Edit Excel Cell A1 </button>
 
-<TableEditor/>
+
+{#if $sheetNames.length > 0}
+  <SheetGetter/>
+{/if}
+{#if $readData.length > 0}
+  <TableEditor data={$readData}/>
+{/if}
 
 {#if $submittedData.length > 0}
   <h2 class="mt-4 font-bold">Submitted Table Data:</h2>
