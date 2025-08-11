@@ -155,17 +155,6 @@ async def ws_handler():
                 merge_second_cell_row("Facility information (Name/NPI)", row_count+1)
                 merge_second_cell_row("NDC code (If applicable)", row_count+1)
                 
-
-                
-
-
-
-                
-                
-                
-
-
-
                 wb.save(file_path)
 
                 await websocket.send_json({

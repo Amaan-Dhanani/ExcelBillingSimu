@@ -1,0 +1,7 @@
+node_modules/
+bun.lockb
+package-lock.json
+.svelte-kit
+build
+dist
+.vite

@@ -1,6 +1,14 @@
 FROM oven/bun:latest
+
 WORKDIR /frontend
-COPY ./packages/frontend/package.json ./packages/frontend/bun.lockb* ./
-RUN bun install
-COPY ./packages/frontend .
-CMD ["bun", "run", "dev"]
+
+COPY . ./
+
+RUN bun install --force --verbose
+RUN bun run build --debug
+
+# Expose Frontend Port
+EXPOSE 3000
+ENV PORT=3000
+
+CMD ["bun", "./build/index.js"]
